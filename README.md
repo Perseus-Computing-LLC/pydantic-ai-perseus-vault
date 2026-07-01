@@ -1,7 +1,7 @@
 # pydantic-ai-mimir
 
 Persistent, local-first, **encrypted** memory for [Pydantic AI](https://ai.pydantic.dev)
-agents — backed by [Mneme](https://github.com/Perseus-Computing-LLC/mneme) (formerly "Mimir").
+agents — backed by [Perseus Vault](https://github.com/Perseus-Computing-LLC/perseus-vault) (formerly "Mimir"/"Mneme").
 
 `MimirToolset` gives a Pydantic AI `Agent` durable memory that survives across
 runs and processes. Your agent can `mimir_remember` facts and `mimir_recall`
@@ -12,7 +12,7 @@ rest).
 ## Why this package?
 
 Pydantic AI already speaks the Model Context Protocol natively via
-[`MCPToolset`](https://ai.pydantic.dev/mcp/client/), and Mneme is an MCP stdio
+[`MCPToolset`](https://ai.pydantic.dev/mcp/client/), and Perseus Vault is an MCP stdio
 server — so you *could* wire them together by hand. `MimirToolset` is the
 ergonomic shortcut: it subclasses `MCPToolset`, resolves the `mimir` binary,
 manages the database path, optionally enables encryption, and spawns
@@ -23,17 +23,17 @@ unchanged.
 
 ## Prerequisite: the `mimir` binary
 
-Mneme is a single self-contained binary. Install it and make sure it is on your
+Perseus Vault is a single self-contained binary. Install it and make sure it is on your
 `PATH`:
 
 ```bash
 # Build from source (Rust toolchain required):
-git clone https://github.com/Perseus-Computing-LLC/mneme
-cd mneme && cargo build --release
-# then put target/release/mneme on your PATH (symlinked as `mimir` too)
+git clone https://github.com/Perseus-Computing-LLC/perseus-vault
+cd perseus-vault && cargo build --release
+# then put target/release/perseus-vault on your PATH (symlinked as `mimir` too)
 
 # ...or download a prebuilt binary from the releases page:
-#   https://github.com/Perseus-Computing-LLC/mneme/releases
+#   https://github.com/Perseus-Computing-LLC/perseus-vault/releases
 ```
 
 Verify:
@@ -109,14 +109,14 @@ Any `MCPToolset` keyword is forwarded:
 memory = MimirToolset(
     db_path="~/.mimir/agent.db",
     id="mimir-memory",          # stable id (needed for Temporal/DBOS durability)
-    include_instructions=True,  # inject Mneme's server instructions into the agent
+    include_instructions=True,  # inject Perseus Vault's server instructions into the agent
     cache_tools=True,
 )
 ```
 
 ## What tools does the agent get?
 
-All of Mneme's MCP tools, including:
+All of Perseus Vault's MCP tools, including:
 
 | Tool | Purpose |
 | --- | --- |
@@ -128,7 +128,7 @@ All of Mneme's MCP tools, including:
 | `mimir_link` / `mimir_traverse` | Relate and walk between memories |
 | ... | and many more (stats, journaling, vault import/export, etc.) |
 
-The exact set depends on your installed Mneme version.
+The exact set depends on your installed Perseus Vault version.
 
 ## Development
 
