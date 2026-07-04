@@ -1,5 +1,7 @@
 # pydantic-ai-perseus-vault
 
+> **📦 Package renamed.** Previously published on PyPI as [`pydantic-ai-mimir`](https://pypi.org/project/pydantic-ai-mimir/) (now archived). This project is now [`pydantic-ai-perseus-vault`](https://pypi.org/project/pydantic-ai-perseus-vault/) — install with `pip install pydantic-ai-perseus-vault`.
+
 Persistent, local-first, **encrypted** memory for [Pydantic AI](https://ai.pydantic.dev)
 agents — backed by [Perseus Vault](https://github.com/Perseus-Computing-LLC/perseus-vault) (formerly "Mimir"/"Mneme").
 
