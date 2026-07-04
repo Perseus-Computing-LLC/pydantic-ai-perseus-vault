@@ -4,14 +4,15 @@ Persistent, local-first, **encrypted** memory for [Pydantic AI](https://ai.pydan
 agents — backed by [Perseus Vault](https://github.com/Perseus-Computing-LLC/perseus-vault) (formerly "Mimir"/"Mneme").
 
 `PerseusVaultToolset` gives a Pydantic AI `Agent` durable memory that survives across
-runs and processes. Your agent can `mimir_remember` facts and `mimir_recall`
+runs and processes. Your agent can `perseus_vault_remember` facts and `perseus_vault_recall`
 them later, with full-text + semantic search, all stored in a local SQLite
 database that never leaves the machine (and can be AES-256-GCM encrypted at
 rest).
 
-> **Tool names.** Perseus Vault still exposes its MCP tools under the historical
-> `mimir_*` prefix (`mimir_remember`, `mimir_recall`, ...), preserved for
-> backward compatibility — that is why the tool names below start with `mimir_`.
+> **Tool names.** Perseus Vault exposes its MCP tools under three aliased
+> prefixes — `perseus_vault_*` (canonical), plus `mimir_*` and `mneme_*` kept
+> for backward compatibility. This package uses the canonical `perseus_vault_*`
+> names throughout.
 
 ## Why this package?
 
@@ -73,9 +74,9 @@ agent = Agent(
     "openai:gpt-5",
     toolsets=[memory],
     instructions=(
-        "You have a persistent memory. Use mimir_remember to store durable "
-        "facts about the user, and mimir_recall to look them up before "
-        "answering."
+        "You have a persistent memory. Use perseus_vault_remember to store "
+        "durable facts about the user, and perseus_vault_recall to look them "
+        "up before answering."
     ),
 )
 
@@ -123,16 +124,17 @@ memory = PerseusVaultToolset(
 
 ## What tools does the agent get?
 
-All of Perseus Vault's MCP tools (exposed under the `mimir_*` prefix), including:
+All of Perseus Vault's MCP tools (exposed under the canonical `perseus_vault_*`
+prefix), including:
 
 | Tool | Purpose |
 | --- | --- |
-| `mimir_remember` | Store a durable memory (category, key, body, tags) |
-| `mimir_recall` | Hybrid full-text + semantic search over memories |
-| `mimir_get_entity` | Fetch a specific memory by id/key |
-| `mimir_timeline` | Time-ordered view of memories |
-| `mimir_forget` / `mimir_supersede` | Delete or replace memories |
-| `mimir_link` / `mimir_traverse` | Relate and walk between memories |
+| `perseus_vault_remember` | Store a durable memory (category, key, body, tags) |
+| `perseus_vault_recall` | Hybrid full-text + semantic search over memories |
+| `perseus_vault_get_entity` | Fetch a specific memory by id/key |
+| `perseus_vault_timeline` | Time-ordered view of memories |
+| `perseus_vault_forget` / `perseus_vault_supersede` | Delete or replace memories |
+| `perseus_vault_link` / `perseus_vault_traverse` | Relate and walk between memories |
 | ... | and many more (stats, journaling, vault import/export, etc.) |
 
 The exact set depends on your installed Perseus Vault version.

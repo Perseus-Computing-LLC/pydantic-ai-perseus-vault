@@ -164,9 +164,9 @@ def test_toolset_forwards_mcp_kwargs(fake_binary, tmp_path):
 
 
 # The smoke test uses $PERSEUS_VAULT_BINARY if set, otherwise a `perseus-vault`
-# on $PATH. Perseus Vault still serves its MCP tools under the historical
-# ``mimir_*`` prefix (preserved for backward compatibility), so the tool-name
-# assertions below intentionally check for ``mimir_*`` names.
+# on $PATH. Perseus Vault exposes its MCP tools under three aliased prefixes
+# (``perseus_vault_*`` / ``mimir_*`` / ``mneme_*``); ``perseus_vault_*`` is the
+# canonical brand prefix, so the tool-name assertions and calls below use it.
 _PV_BINARY = os.environ.get("PERSEUS_VAULT_BINARY") or shutil.which("perseus-vault")
 
 
@@ -187,9 +187,9 @@ async def test_smoke_real_perseus_vault_lists_tools(tmp_path):
         # The underlying FastMCP client performs the real MCP tools/list call.
         tools = await ts.client.list_tools()
         names = {t.name for t in tools}
-        assert any(n.startswith("mimir_") for n in names), names
-        assert "mimir_remember" in names
-        assert "mimir_recall" in names
+        assert any(n.startswith("perseus_vault_") for n in names), names
+        assert "perseus_vault_remember" in names
+        assert "perseus_vault_recall" in names
 
 
 @pytest.mark.skipif(
@@ -200,8 +200,9 @@ async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
     """Full round-trip through a real Pydantic AI Agent over the live MCP link.
 
     A FunctionModel drives the conversation deterministically: first turn calls
-    ``mimir_remember`` with a real fact, second turn calls ``mimir_recall``,
-    third turn returns the recalled text. This proves the agent discovers,
+    ``perseus_vault_remember`` with a real fact, second turn calls
+    ``perseus_vault_recall``, third turn returns the recalled text. This proves
+    the agent discovers,
     invokes, and gets real results from Perseus Vault's tools — and that the
     fact actually persisted and was retrieved."""
     import json
@@ -230,7 +231,7 @@ async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
             return ModelResponse(
                 parts=[
                     ToolCallPart(
-                        "mimir_remember",
+                        "perseus_vault_remember",
                         {
                             "category": "smoke",
                             "key": "launch-code",
@@ -242,7 +243,7 @@ async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
             )
         if len(returns) == 1:
             return ModelResponse(
-                parts=[ToolCallPart("mimir_recall", {"query": "launch code", "limit": 5})]
+                parts=[ToolCallPart("perseus_vault_recall", {"query": "launch code", "limit": 5})]
             )
         # Surface the recall result so the test can assert persistence.
         return ModelResponse(parts=[TextPart(str(returns[-1].content))])

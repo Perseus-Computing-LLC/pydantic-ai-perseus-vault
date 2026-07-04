@@ -3,8 +3,8 @@
 Perseus Vault (https://github.com/Perseus-Computing-LLC/perseus-vault) is an
 open-source (MIT) local-first, encrypted, persistent memory engine that speaks
 the Model Context Protocol (MCP) over stdio. It ships dozens of memory tools
-(``mimir_remember``, ``mimir_recall``, ``mimir_timeline``, ...) that let an agent
-durably store and retrieve facts across sessions.
+(``perseus_vault_remember``, ``perseus_vault_recall``, ``perseus_vault_timeline``,
+...) that let an agent durably store and retrieve facts across sessions.
 
 Pydantic AI already speaks MCP natively via
 :class:`pydantic_ai.mcp.MCPToolset`. ``PerseusVaultToolset`` is a thin, ergonomic
