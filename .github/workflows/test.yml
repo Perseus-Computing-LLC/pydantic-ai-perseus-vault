@@ -24,5 +24,5 @@ jobs:
       - name: Install
         run: pip install -e ".[test]"
 
-      - name: Run tests (unit; real smoke test auto-skips without a mimir binary)
+      - name: Run tests (unit; real smoke test auto-skips without a perseus-vault binary)
         run: python -m pytest tests/ -q

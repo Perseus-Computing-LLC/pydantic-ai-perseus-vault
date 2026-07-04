@@ -1,9 +1,9 @@
-"""Tests for ``pydantic_ai_mimir``.
+"""Tests for ``pydantic_ai_perseus_vault``.
 
 The unit tests mock binary resolution and the ``StdioTransport`` so they run
-with no ``mimir`` binary present and never spawn a subprocess. A real,
-end-to-end smoke test is included but skipped automatically when the ``mimir``
-binary is not on ``$PATH``.
+with no ``perseus-vault`` binary present and never spawn a subprocess. A real,
+end-to-end smoke test is included but skipped automatically when the
+``perseus-vault`` binary is not on ``$PATH``.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ import shutil
 
 import pytest
 
-import pydantic_ai_mimir.toolset as toolset_mod
-from pydantic_ai_mimir import MimirToolset, build_stdio_transport
+import pydantic_ai_perseus_vault.toolset as toolset_mod
+from pydantic_ai_perseus_vault import PerseusVaultToolset, build_stdio_transport
 from pydantic_ai.mcp import MCPToolset
 
 
@@ -22,7 +22,7 @@ from pydantic_ai.mcp import MCPToolset
 
 
 class FakeStdioTransport:
-    """Records the args MimirToolset would spawn ``mimir serve`` with."""
+    """Records the args PerseusVaultToolset would spawn ``perseus-vault serve`` with."""
 
     def __init__(self, command, args, env=None):
         self.command = command
@@ -45,13 +45,13 @@ def fake_transport(monkeypatch):
 
 @pytest.fixture
 def fake_binary(monkeypatch, tmp_path):
-    """Make ``shutil.which('mimir')`` resolve to a fake on-PATH binary."""
-    fake = tmp_path / "mimir"
+    """Make ``shutil.which('perseus-vault')`` resolve to a fake on-PATH binary."""
+    fake = tmp_path / "perseus-vault"
     fake.write_text("#!/bin/sh\n")
     monkeypatch.setattr(
         toolset_mod.shutil,
         "which",
-        lambda name: str(fake) if name == "mimir" else shutil.which(name),
+        lambda name: str(fake) if name == "perseus-vault" else shutil.which(name),
     )
     return str(fake)
 
@@ -60,7 +60,7 @@ def fake_binary(monkeypatch, tmp_path):
 
 
 def test_resolve_binary_from_path(fake_binary):
-    assert toolset_mod._resolve_binary("mimir") == fake_binary
+    assert toolset_mod._resolve_binary("perseus-vault") == fake_binary
 
 
 def test_resolve_binary_missing_raises():
@@ -69,13 +69,13 @@ def test_resolve_binary_missing_raises():
 
 
 def test_resolve_binary_explicit_path_missing_raises(tmp_path):
-    missing = str(tmp_path / "nope" / "mimir")
+    missing = str(tmp_path / "nope" / "perseus-vault")
     with pytest.raises(FileNotFoundError, match="not found at"):
         toolset_mod._resolve_binary(missing)
 
 
 def test_resolve_binary_explicit_path_ok(tmp_path):
-    real = tmp_path / "custom-mimir"
+    real = tmp_path / "custom-perseus-vault"
     real.write_text("x")
     assert toolset_mod._resolve_binary(str(real)) == str(real)
 
@@ -101,10 +101,10 @@ def test_transport_expands_home(fake_transport, fake_binary):
 
 def test_transport_encryption_key(fake_transport, fake_binary, tmp_path):
     db = tmp_path / "agent.db"
-    t = build_stdio_transport(str(db), encryption_key="/keys/mimir.key")
+    t = build_stdio_transport(str(db), encryption_key="/keys/perseus-vault.key")
     assert "--encryption-key" in t.args
     assert t.args[t.args.index("--encryption-key") + 1] == os.path.expanduser(
-        "/keys/mimir.key"
+        "/keys/perseus-vault.key"
     )
 
 
@@ -117,8 +117,8 @@ def test_transport_extra_args(fake_transport, fake_binary, tmp_path):
 def test_transport_env_merged(fake_transport, fake_binary, tmp_path, monkeypatch):
     monkeypatch.setenv("PRE_EXISTING", "1")
     db = tmp_path / "agent.db"
-    t = build_stdio_transport(str(db), env={"MIMIR_EXTRA": "x"})
-    assert t.env["MIMIR_EXTRA"] == "x"
+    t = build_stdio_transport(str(db), env={"PERSEUS_VAULT_EXTRA": "x"})
+    assert t.env["PERSEUS_VAULT_EXTRA"] == "x"
     assert t.env["PRE_EXISTING"] == "1"  # merged over os.environ
 
 
@@ -128,7 +128,7 @@ def test_transport_no_env_is_none(fake_transport, fake_binary, tmp_path):
     assert t.env is None
 
 
-# ── MimirToolset ─────────────────────────────────────────────────────────────
+# ── PerseusVaultToolset ──────────────────────────────────────────────────────
 
 
 # These build a *real* MCPToolset (the binary is a real file, but
@@ -137,68 +137,74 @@ def test_transport_no_env_is_none(fake_transport, fake_binary, tmp_path):
 
 
 def test_toolset_is_mcp_toolset(fake_binary, tmp_path):
-    ts = MimirToolset(db_path=str(tmp_path / "agent.db"))
+    ts = PerseusVaultToolset(db_path=str(tmp_path / "agent.db"))
     assert isinstance(ts, MCPToolset)
 
 
 def test_toolset_records_db_path(fake_binary, tmp_path):
     db = tmp_path / "agent.db"
-    ts = MimirToolset(db_path=str(db))
+    ts = PerseusVaultToolset(db_path=str(db))
     assert ts.db_path == str(db)
 
 
 def test_toolset_missing_binary_raises(monkeypatch, tmp_path):
     monkeypatch.setattr(toolset_mod.shutil, "which", lambda name: None)
     with pytest.raises(FileNotFoundError):
-        MimirToolset(db_path=str(tmp_path / "agent.db"))
+        PerseusVaultToolset(db_path=str(tmp_path / "agent.db"))
 
 
 def test_toolset_forwards_mcp_kwargs(fake_binary, tmp_path):
     # `id` is a recognised MCPToolset kwarg; passing it must not error and must
     # be applied to the underlying toolset.
-    ts = MimirToolset(db_path=str(tmp_path / "agent.db"), id="mimir-memory")
-    assert ts.id == "mimir-memory"
+    ts = PerseusVaultToolset(db_path=str(tmp_path / "agent.db"), id="perseus-vault-memory")
+    assert ts.id == "perseus-vault-memory"
 
 
 # ── Real smoke test (skipped without the binary) ─────────────────────────────
 
 
-# The smoke test uses $MIMIR_BINARY if set, otherwise a `mimir` on $PATH.
-_MIMIR_BINARY = os.environ.get("MIMIR_BINARY") or shutil.which("mimir")
+# The smoke test uses $PERSEUS_VAULT_BINARY if set, otherwise a `perseus-vault`
+# on $PATH. Perseus Vault exposes its MCP tools under three aliased prefixes
+# (``perseus_vault_*`` / ``mimir_*`` / ``mneme_*``); ``perseus_vault_*`` is the
+# canonical brand prefix, so the tool-name assertions and calls below use it.
+_PV_BINARY = os.environ.get("PERSEUS_VAULT_BINARY") or shutil.which("perseus-vault")
 
 
 @pytest.mark.skipif(
-    _MIMIR_BINARY is None,
-    reason="no mimir binary ($MIMIR_BINARY unset and none on $PATH)",
+    _PV_BINARY is None,
+    reason="no perseus-vault binary ($PERSEUS_VAULT_BINARY unset and none on $PATH)",
 )
-async def test_smoke_real_mimir_lists_tools(tmp_path):
-    """Spawn the real ``mimir serve`` and confirm Mimir's memory tools load.
+async def test_smoke_real_perseus_vault_lists_tools(tmp_path):
+    """Spawn the real ``perseus-vault serve`` and confirm its memory tools load.
 
     Exercises the full path: binary resolution -> StdioTransport ->
     MCPToolset -> MCP initialize handshake -> tools/list.
     """
-    ts = MimirToolset(db_path=str(tmp_path / "smoke.db"), mimir_binary=_MIMIR_BINARY)
+    ts = PerseusVaultToolset(
+        db_path=str(tmp_path / "smoke.db"), perseus_vault_binary=_PV_BINARY
+    )
     async with ts:
         # The underlying FastMCP client performs the real MCP tools/list call.
         tools = await ts.client.list_tools()
         names = {t.name for t in tools}
-        assert any(n.startswith("mimir_") for n in names), names
-        assert "mimir_remember" in names
-        assert "mimir_recall" in names
+        assert any(n.startswith("perseus_vault_") for n in names), names
+        assert "perseus_vault_remember" in names
+        assert "perseus_vault_recall" in names
 
 
 @pytest.mark.skipif(
-    _MIMIR_BINARY is None,
-    reason="no mimir binary ($MIMIR_BINARY unset and none on $PATH)",
+    _PV_BINARY is None,
+    reason="no perseus-vault binary ($PERSEUS_VAULT_BINARY unset and none on $PATH)",
 )
 async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
     """Full round-trip through a real Pydantic AI Agent over the live MCP link.
 
     A FunctionModel drives the conversation deterministically: first turn calls
-    ``mimir_remember`` with a real fact, second turn calls ``mimir_recall``,
-    third turn returns the recalled text. This proves the agent discovers,
-    invokes, and gets real results from Mimir's tools — and that the fact
-    actually persisted and was retrieved."""
+    ``perseus_vault_remember`` with a real fact, second turn calls
+    ``perseus_vault_recall``, third turn returns the recalled text. This proves
+    the agent discovers,
+    invokes, and gets real results from Perseus Vault's tools — and that the
+    fact actually persisted and was retrieved."""
     import json
 
     from pydantic_ai import Agent
@@ -225,7 +231,7 @@ async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
             return ModelResponse(
                 parts=[
                     ToolCallPart(
-                        "mimir_remember",
+                        "perseus_vault_remember",
                         {
                             "category": "smoke",
                             "key": "launch-code",
@@ -237,12 +243,14 @@ async def test_smoke_real_agent_remembers_and_recalls(tmp_path):
             )
         if len(returns) == 1:
             return ModelResponse(
-                parts=[ToolCallPart("mimir_recall", {"query": "launch code", "limit": 5})]
+                parts=[ToolCallPart("perseus_vault_recall", {"query": "launch code", "limit": 5})]
             )
         # Surface the recall result so the test can assert persistence.
         return ModelResponse(parts=[TextPart(str(returns[-1].content))])
 
-    ts = MimirToolset(db_path=str(tmp_path / "agent.db"), mimir_binary=_MIMIR_BINARY)
+    ts = PerseusVaultToolset(
+        db_path=str(tmp_path / "agent.db"), perseus_vault_binary=_PV_BINARY
+    )
     agent = Agent(FunctionModel(model), toolsets=[ts])
     async with agent:
         result = await agent.run("Remember the launch code, then recall it.")

@@ -1,29 +1,29 @@
-"""``MimirToolset`` — a Pydantic AI toolset backed by the Mimir memory engine.
+"""``PerseusVaultToolset`` — a Pydantic AI toolset backed by the Perseus Vault memory engine.
 
-Mimir (https://github.com/Perseus-Computing-LLC/mimir) is an open-source (MIT)
-local-first, encrypted, persistent memory engine that speaks the Model Context
-Protocol (MCP) over stdio. It ships dozens of memory tools (``mimir_remember``,
-``mimir_recall``, ``mimir_timeline``, ...) that let an agent durably store and
-retrieve facts across sessions.
+Perseus Vault (https://github.com/Perseus-Computing-LLC/perseus-vault) is an
+open-source (MIT) local-first, encrypted, persistent memory engine that speaks
+the Model Context Protocol (MCP) over stdio. It ships dozens of memory tools
+(``perseus_vault_remember``, ``perseus_vault_recall``, ``perseus_vault_timeline``,
+...) that let an agent durably store and retrieve facts across sessions.
 
 Pydantic AI already speaks MCP natively via
-:class:`pydantic_ai.mcp.MCPToolset`. ``MimirToolset`` is a thin, ergonomic
+:class:`pydantic_ai.mcp.MCPToolset`. ``PerseusVaultToolset`` is a thin, ergonomic
 subclass of that toolset: instead of hand-assembling a ``StdioTransport`` and
-remembering the exact ``mimir serve --db ...`` invocation, you write::
+remembering the exact ``perseus-vault serve --db ...`` invocation, you write::
 
     from pydantic_ai import Agent
-    from pydantic_ai_mimir import MimirToolset
+    from pydantic_ai_perseus_vault import PerseusVaultToolset
 
-    agent = Agent('openai:gpt-5', toolsets=[MimirToolset(db_path='~/.mimir/agent.db')])
+    agent = Agent('openai:gpt-5', toolsets=[PerseusVaultToolset(db_path='~/.mimir/agent.db')])
 
 The toolset:
 
-* resolves the ``mimir`` binary from ``$PATH`` (or an explicit path) and fails
-  fast with an actionable error if it is missing;
+* resolves the ``perseus-vault`` binary from ``$PATH`` (or an explicit path) and
+  fails fast with an actionable error if it is missing;
 * expands ``~`` in the database path and creates the parent directory;
 * wires an optional AES-256-GCM encryption-key file into the server;
-* spawns ``mimir serve --db <db_path>`` as the stdio MCP server and exposes all
-  of Mimir's tools to the agent.
+* spawns ``perseus-vault serve --db <db_path>`` as the stdio MCP server and
+  exposes all of Perseus Vault's tools to the agent.
 
 Because it *is* an :class:`~pydantic_ai.mcp.MCPToolset`, every Pydantic AI MCP
 feature (tool caching, ``include_instructions``, ``process_tool_call``, tool
@@ -44,8 +44,8 @@ else:  # pragma: no cover - runtime alias only
     AgentDepsT = Any
 
 
-def _resolve_binary(mimir_binary: str) -> str:
-    """Return an absolute path to the ``mimir`` executable.
+def _resolve_binary(perseus_vault_binary: str) -> str:
+    """Return an absolute path to the ``perseus-vault`` executable.
 
     An absolute/explicit path is returned as-is; a bare name is resolved against
     ``$PATH``.
@@ -54,20 +54,24 @@ def _resolve_binary(mimir_binary: str) -> str:
         FileNotFoundError: If the binary cannot be located.
     """
     # Treat anything with a path separator (or an absolute path) as explicit.
-    if os.path.isabs(mimir_binary) or os.sep in mimir_binary or (os.altsep and os.altsep in mimir_binary):
-        if not os.path.isfile(mimir_binary):
+    if (
+        os.path.isabs(perseus_vault_binary)
+        or os.sep in perseus_vault_binary
+        or (os.altsep and os.altsep in perseus_vault_binary)
+    ):
+        if not os.path.isfile(perseus_vault_binary):
             raise FileNotFoundError(
-                f"mimir binary not found at {mimir_binary!r}."
+                f"perseus-vault binary not found at {perseus_vault_binary!r}."
             )
-        return mimir_binary
+        return perseus_vault_binary
 
-    resolved = shutil.which(mimir_binary)
+    resolved = shutil.which(perseus_vault_binary)
     if resolved is None:
         raise FileNotFoundError(
-            f"mimir binary not found on $PATH (looked for {mimir_binary!r}). "
-            "Install Mimir from https://github.com/Perseus-Computing-LLC/mimir "
+            f"perseus-vault binary not found on $PATH (looked for {perseus_vault_binary!r}). "
+            "Install Perseus Vault from https://github.com/Perseus-Computing-LLC/perseus-vault "
             "(build from source or download a release binary) and ensure it is "
-            "on your PATH, or pass the absolute path via mimir_binary=."
+            "on your PATH, or pass the absolute path via perseus_vault_binary=."
         )
     return resolved
 
@@ -75,24 +79,24 @@ def _resolve_binary(mimir_binary: str) -> str:
 def build_stdio_transport(
     db_path: str = "~/.mimir/agent.db",
     *,
-    mimir_binary: str = "mimir",
+    perseus_vault_binary: str = "perseus-vault",
     encryption_key: str | None = None,
     extra_args: list[str] | None = None,
     env: dict[str, str] | None = None,
 ):
-    """Build the ``StdioTransport`` that runs ``mimir serve`` for this toolset.
+    """Build the ``StdioTransport`` that runs ``perseus-vault serve`` for this toolset.
 
     Exposed separately so callers who want full control (e.g. to pass the
     transport to a plain :class:`~pydantic_ai.mcp.MCPToolset` or a
     ``fastmcp.Client``) can reuse the exact spawn logic.
 
     Args:
-        db_path: Path to the Mimir SQLite database. ``~`` is expanded and the
-            parent directory is created if missing.
-        mimir_binary: Name or path of the ``mimir`` executable.
+        db_path: Path to the Perseus Vault SQLite database. ``~`` is expanded and
+            the parent directory is created if missing.
+        perseus_vault_binary: Name or path of the ``perseus-vault`` executable.
         encryption_key: Optional path to an AES-256-GCM key file
-            (base64-encoded, 32 bytes). Enables Mimir's at-rest encryption.
-        extra_args: Additional CLI args appended to ``mimir serve``.
+            (base64-encoded, 32 bytes). Enables Perseus Vault's at-rest encryption.
+        extra_args: Additional CLI args appended to ``perseus-vault serve``.
         env: Extra environment variables for the subprocess (merged over
             ``os.environ``).
 
@@ -104,7 +108,7 @@ def build_stdio_transport(
     # only need the helper symbols for typing.
     from fastmcp.client.transports import StdioTransport
 
-    binary = _resolve_binary(mimir_binary)
+    binary = _resolve_binary(perseus_vault_binary)
 
     resolved_db = os.path.expanduser(db_path)
     parent = os.path.dirname(resolved_db)
@@ -124,21 +128,21 @@ def build_stdio_transport(
     return StdioTransport(command=binary, args=args, env=merged_env)
 
 
-class MimirToolset(MCPToolset[AgentDepsT]):
-    """A Pydantic AI toolset exposing the Mimir memory engine's MCP tools.
+class PerseusVaultToolset(MCPToolset[AgentDepsT]):
+    """A Pydantic AI toolset exposing the Perseus Vault memory engine's MCP tools.
 
-    Spawns ``mimir serve --db <db_path>`` as a local stdio MCP server and makes
-    all of its memory tools available to the agent. This is a thin wrapper over
-    :class:`pydantic_ai.mcp.MCPToolset`; any keyword accepted by ``MCPToolset``
-    (e.g. ``id``, ``include_instructions``, ``process_tool_call``,
+    Spawns ``perseus-vault serve --db <db_path>`` as a local stdio MCP server and
+    makes all of its memory tools available to the agent. This is a thin wrapper
+    over :class:`pydantic_ai.mcp.MCPToolset`; any keyword accepted by
+    ``MCPToolset`` (e.g. ``id``, ``include_instructions``, ``process_tool_call``,
     ``max_retries``, ``cache_tools``) may be passed through.
 
     Example::
 
         from pydantic_ai import Agent
-        from pydantic_ai_mimir import MimirToolset
+        from pydantic_ai_perseus_vault import PerseusVaultToolset
 
-        memory = MimirToolset(db_path="~/.mimir/agent.db")
+        memory = PerseusVaultToolset(db_path="~/.mimir/agent.db")
         agent = Agent("openai:gpt-5", toolsets=[memory])
 
         async def main():
@@ -151,34 +155,36 @@ class MimirToolset(MCPToolset[AgentDepsT]):
         self,
         db_path: str = "~/.mimir/agent.db",
         *,
-        mimir_binary: str = "mimir",
+        perseus_vault_binary: str = "perseus-vault",
         encryption_key: str | None = None,
         extra_args: list[str] | None = None,
         env: dict[str, str] | None = None,
         **mcp_toolset_kwargs: Any,
     ) -> None:
-        """Create a Mimir-backed toolset.
+        """Create a Perseus Vault-backed toolset.
 
         Args:
-            db_path: Path to the Mimir SQLite database. ``~`` is expanded and the
-                parent directory is created. Defaults to ``~/.mimir/agent.db``.
-            mimir_binary: Name or path of the ``mimir`` executable. A bare name
-                is resolved from ``$PATH``; an explicit path is used directly.
+            db_path: Path to the Perseus Vault SQLite database. ``~`` is expanded
+                and the parent directory is created. Defaults to
+                ``~/.mimir/agent.db``.
+            perseus_vault_binary: Name or path of the ``perseus-vault``
+                executable. A bare name is resolved from ``$PATH``; an explicit
+                path is used directly.
             encryption_key: Optional path to an AES-256-GCM key file to enable
-                Mimir's at-rest encryption.
-            extra_args: Extra CLI args appended to ``mimir serve``.
-            env: Extra environment variables for the ``mimir`` subprocess.
+                Perseus Vault's at-rest encryption.
+            extra_args: Extra CLI args appended to ``perseus-vault serve``.
+            env: Extra environment variables for the ``perseus-vault`` subprocess.
             **mcp_toolset_kwargs: Forwarded verbatim to
                 :class:`pydantic_ai.mcp.MCPToolset` (e.g. ``id``,
                 ``include_instructions``, ``cache_tools``, ``max_retries``).
 
         Raises:
-            FileNotFoundError: If the ``mimir`` binary cannot be located.
+            FileNotFoundError: If the ``perseus-vault`` binary cannot be located.
         """
         self.db_path = os.path.expanduser(db_path)
         transport = build_stdio_transport(
             db_path,
-            mimir_binary=mimir_binary,
+            perseus_vault_binary=perseus_vault_binary,
             encryption_key=encryption_key,
             extra_args=extra_args,
             env=env,

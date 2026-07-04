@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pydantic-ai-mimir"
+name = "pydantic-ai-perseus-vault"
 version = "0.1.0"
 authors = [
     { name = "Perseus Computing LLC", email = "hermes@perseus.observer" },
 ]
-description = "Mimir persistent, local, encrypted memory for Pydantic AI agents — exposed as a Toolset."
+description = "Perseus Vault persistent, local, encrypted memory for Pydantic AI agents — exposed as a Toolset."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
-keywords = ["pydantic-ai", "mcp", "memory", "mimir", "agents", "llm"]
+keywords = ["pydantic-ai", "mcp", "memory", "perseus-vault", "agents", "llm"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -38,10 +38,10 @@ test = ["pytest>=7.0", "pytest-asyncio>=0.23"]
 Homepage = "https://github.com/Perseus-Computing-LLC/pydantic-ai-mimir"
 Repository = "https://github.com/Perseus-Computing-LLC/pydantic-ai-mimir"
 "Bug Tracker" = "https://github.com/Perseus-Computing-LLC/pydantic-ai-mimir/issues"
-Mimir = "https://github.com/Perseus-Computing-LLC/mimir"
+"Perseus Vault" = "https://github.com/Perseus-Computing-LLC/perseus-vault"
 
 [tool.hatch.build.targets.wheel]
-packages = ["pydantic_ai_mimir"]
+packages = ["pydantic_ai_perseus_vault"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
