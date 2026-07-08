@@ -69,8 +69,8 @@ import asyncio
 from pydantic_ai import Agent
 from pydantic_ai_perseus_vault import PerseusVaultToolset
 
-# Spawns `perseus-vault serve --db ~/.mimir/agent.db` and exposes its memory tools.
-memory = PerseusVaultToolset(db_path="~/.mimir/agent.db")
+# Spawns `perseus-vault serve --db ~/.perseus-vault/agent.db` and exposes its memory tools.
+memory = PerseusVaultToolset(db_path="~/.perseus-vault/agent.db")
 
 agent = Agent(
     "openai:gpt-5",
@@ -97,8 +97,8 @@ asyncio.run(main())
 
 ```python
 memory = PerseusVaultToolset(
-    db_path="~/.mimir/agent.db",
-    encryption_key="~/.mimir/key.b64",  # base64-encoded 32-byte AES-256-GCM key
+    db_path="~/.perseus-vault/agent.db",
+    encryption_key="~/.perseus-vault/key.b64",  # base64-encoded 32-byte AES-256-GCM key
 )
 ```
 
@@ -106,7 +106,7 @@ memory = PerseusVaultToolset(
 
 ```python
 memory = PerseusVaultToolset(
-    db_path="~/.mimir/agent.db",
+    db_path="~/.perseus-vault/agent.db",
     perseus_vault_binary="/opt/perseus-vault/bin/perseus-vault",  # explicit path; otherwise resolved from PATH
 )
 ```
@@ -117,7 +117,7 @@ Any `MCPToolset` keyword is forwarded:
 
 ```python
 memory = PerseusVaultToolset(
-    db_path="~/.mimir/agent.db",
+    db_path="~/.perseus-vault/agent.db",
     id="perseus-vault-memory",  # stable id (needed for Temporal/DBOS durability)
     include_instructions=True,  # inject Perseus Vault's server instructions into the agent
     cache_tools=True,
